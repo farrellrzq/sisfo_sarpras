@@ -5,6 +5,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BorrowingController;
+use App\Http\Controllers\ReturningController;
 use App\Http\Controllers\UserController;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -28,9 +29,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::middleware(['role:peminjam'])->group(function () {
-        // Route::apiResource('/items', ItemController::class)->except('store','update', 'destroy');
+        Route::apiResource('/items', ItemController::class)->except('store','update', 'destroy');
         Route::post('/borrowings', [BorrowingController::class, 'requestBorrowing']);
         Route::get('/borrowings', [BorrowingController::class, 'historyBorrowings']);
+        Route::post('/returnings/{id}/return', [ReturningController::class, 'returnItem']);
     });
 
     Route::post('/logout', [AuthController::class, 'logout']);

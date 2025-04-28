@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Borrowing;
+use App\Models\Item;
 use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,15 @@ class BorrowingController extends Controller
             'return_date' => 'required|date',
             'deleted_at' => 'nullable|date',
         ]);
+
+
+        // if item status has dipinjam doesnt create a new borrowing
+        $item = Item::findOrFail($request->item_id);
+        if ($item->status === 'dipinjam') {
+            return response()->json([
+                'message' => 'Item sedang dipinjam.',
+            ], 400);
+        }
 
         $borrowing = Borrowing::create([
             'item_id' => $request->item_id,

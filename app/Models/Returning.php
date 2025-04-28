@@ -10,6 +10,5 @@ class Returning extends Model
         'item_id',
         'user_id',
         'status_return',
-        
     ];
 }

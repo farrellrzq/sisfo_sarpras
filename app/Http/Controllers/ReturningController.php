@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Borrowing;
+use App\Models\Log;
 use App\Models\Returning;
 use Illuminate\Http\Request;
 
@@ -13,18 +15,35 @@ class ReturningController extends Controller
         return response()->json($returnings);
     }
 
-    public function store(Request $request)
+
+    public function returnItem(Request $request, $id)
     {
-        $request->validate([
-            'borrowing_id' => 'required|exists:borrowings,id',
-            'date' => 'required|date'
-        ]);
+        $borrowing = Borrowing::with('item')->findOrFail($id);
 
-        $returning = Returning::create([
-            'borrowing_id' => $request->borrowing_id,
-            'date' => $request->date
-        ]);
+        if ($borrowing->status_borrow !== 'returned') {
+            $borrowing->status_borrow = 'returned';
+            $borrowing->return_date = now();
+            $borrowing->save();
 
-        return response()->json($returning, 201);
+            $borrowing->item->update([
+                'status' => 'tersedia'
+            ]);
+            
+            Log::create([
+                'user_id' => auth()->user()->id,
+                'action' => 'update',
+                'model' => 'Borrowing',
+                'details' => 'Returned borrowing ID: ' . $borrowing->id,
+            ]);
+
+            return response()->json([
+                'message' => 'Item successfully returned.',
+                'data' => $borrowing
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Item was already returned.',
+        ], 400);
     }
 }
