@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('code');
             $table->integer('price');
-            $table->foreignId('category_id')->constrained();
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->string('condition');
             $table->enum('status', ['tersedia', 'dipinjam']);
             $table->timestamps();

@@ -12,60 +12,55 @@ class AdminBorrowingController extends Controller
     // Admin melihat semua data peminjaman
     public function allBorrowings()
     {
-         $borrowings = Borrowing::with('user', 'item')->latest()->get();
-         return response()->json($borrowings);
+        $borrowings = Borrowing::with('user', 'item')->latest()->get();
+        return response()->json($borrowings);
     }
 
-     // Admin memproses pengajuan (setujui atau tolak)
-    // public function processBorrowing(Request $request, $id)
-    // {
-    //     $validated = $request->validate([
-    //         'status' => 'required|in:approved,rejected',
-    //     ]);
-
-    //     $borrowing = Borrowing::findOrFail($id);
-    //     $borrowing->status = $validated['status'];
-    //     $borrowing->save();
-
-    //     Log::create([
-    //         'user_id' => auth()->user()->id,
-    //         'action' => 'update',
-    //         'model' => 'Borrowing',
-    //         'details' => 'Update status peminjaman with id ' . $borrowing->id
-    //     ]);
-
-    //     return response()->json([
-    //         'message' => 'Status peminjaman diperbarui.',
-    //         'data' => $borrowing
-    //     ]);
-    // }
-
     // Admin menyetujui peminjaman
-public function approveBorrowing(Request $request, $id)
-{
-    // Cari data borrowing
-    $borrowing = Borrowing::findOrFail($id);
-    $borrowing->status_borrow = 'approved';
-    $borrowing->save();
+    public function approveBorrowing(Request $request, $id)
+    {
+        // Cari data borrowing
+        $borrowing = Borrowing::findOrFail($id);
+        $borrowing->status_borrow = 'approved';
+        $borrowing->save();
 
-    // Update status item jadi dipinjamkan
-    $item = $borrowing->item;
-    $item->status = 'dipinjam';
-    $item->save();
+        // Update status item jadi dipinjamkan
+        $item = $borrowing->item;
+        $item->status = 'dipinjam';
+        $item->save();
 
-    // Log aktivitas approve
-    Log::create([
-        'user_id' => auth()->user()->id,
-        'action' => 'update',
-        'model' => 'Borrowing',
-        'details' => 'Approved borrowing ID: ' . $borrowing->id,
-    ]);
+        // Log aktivitas approve
+        Log::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'update',
+            'model' => 'Borrowing',
+            'details' => 'Approved borrowing ID: ' . $borrowing->id,
+        ]);
 
-    return response()->json([
-        'message' => 'Peminjaman disetujui dan item sudah dipinjamkan.',
-        'data' => $borrowing
-    ]);
-}
+        return response()->json([
+            'message' => 'Peminjaman disetujui dan item sudah dipinjamkan.',
+            'data' => $borrowing
+        ]);
+    }
+
+    //Admin menolak peminjaman
+    public function rejectBorrowing($id){
+
+        //Cari data barang
+        $borrowing = Borrowing::findOrFail($id);
+
+        //Mengubah status menjadi ditolak
+        $borrowing->status_borrow = 'rejected';
+        $borrowing->save();
+
+        // Log aktivitas reject
+        Log::create([
+            'user_id' => auth()->user()->id,
+            'action' => 'update',
+            'model' => 'Borrowing',
+            'details' => 'Rejected borrowing ID: ' . $borrowing->id,
+        ]);
+    }
 
     // Admin menandai peminjaman telah dikembalikan
     public function markAsReturned($id)
@@ -84,8 +79,9 @@ public function approveBorrowing(Request $request, $id)
     // Admin menghapus data peminjaman
     public function destroy($id)
     {
-        Borrowing::destroy($id);
+        $borrowing = Borrowing::findOrFail($id);
+        $borrowing->delete();
+
         return response()->json(['message' => 'Data peminjaman dihapus.']);
     }
-
 }

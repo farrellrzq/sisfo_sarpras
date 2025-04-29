@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Models\Log;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -21,16 +21,18 @@ class AuthController extends Controller
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
             'password' => bcrypt($validatedData['password']),
+
         ]);
 
-        return redirect()->route('login');
+
+        return response()->json([
+            'message' => 'User created successfully',
+            'user' => $user
+        ], 201);
 
     }
 
-    public function loginPage() {
-        return view('auth.login');
-    }
-
+    //create login method with api token sanctum
     public function login(Request $request) {
         $credentials = $request->validate([
             'email' => 'required|email',
@@ -38,21 +40,31 @@ class AuthController extends Controller
         ]);
 
         if (auth()->guard()->attempt($credentials)) {
-            $request->session()->regenerate();
+            $user = auth()->user();
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-            if(Auth::user()){
-                return redirect()->route('home');
-            }
+            Log::create([
+                'user_id' => $user->id,
+                'action' => 'login',
+                'model' => 'User',
+                'details' => 'User logged in',
+            ]);
+
+            return response()->json([
+                'message' => 'Login successful',
+                'user' => $user,
+                'token' => $token
+            ]);
         } else {
-            return redirect()->route('login');
+            return response()->json([
+                'message' => 'Login failed',
+            ], 401);
         }
     }
 
-    public function logout(Request $request) {
-        Auth::logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    public function logout(Request $request) {
+        $request->user()->currentAccessToken()->delete();
 
         Log::create([
             'user_id' => $request->user()->id,
@@ -61,6 +73,8 @@ class AuthController extends Controller
             'details' => 'User logged out',
         ]);
 
-        return redirect()->route('login');
+        return response()->json([
+            'message' => 'Logout successful',
+        ]);
     }
 }

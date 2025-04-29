@@ -7,10 +7,5 @@ use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
-    public function index()
-    {
-        $logs = Log::latest()->get();
-
-        return response()->json($logs);
-    }
+    
 }
